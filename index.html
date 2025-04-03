@@ -34,6 +34,13 @@
       width: 48%;
       margin: 1%;
     }
+    .qr-area {
+      text-align: center;
+      margin-top: 20px;
+    }
+    canvas {
+      margin-top: 10px;
+    }
     .result {
       margin-top: 10px;
       color: green;
@@ -50,40 +57,39 @@
       <option value="佐藤">佐藤</option>
       <option value="鈴木">鈴木</option>
       <option value="田中">田中</option>
-      <!-- ここに追加可能 -->
     </select>
     <div class="btn-area">
-      <button onclick="submitRecord('出勤')">出勤</button>
-      <button onclick="submitRecord('退勤')">退勤</button>
+      <button onclick="generateQR('出勤')">出勤</button>
+      <button onclick="generateQR('退勤')">退勤</button>
+    </div>
+    <div class="qr-area">
+      <div id="qr-label"></div>
+      <canvas id="qr-canvas"></canvas>
     </div>
     <div class="result" id="result"></div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
   <script>
-    const webhookUrl = "YOUR_GAS_WEBHOOK_URL"; // GASのdoPost先URLを入れてね
-
-    function submitRecord(type) {
+    function generateQR(type) {
       const name = document.getElementById('name').value;
       if (!name) {
         alert('名前を選択してください');
         return;
       }
-      const payload = {
-        name,
-        type,
-        timestamp: new Date().toISOString()
-      };
+      const now = new Date();
+      const timestamp = now.toISOString();
+      const data = `${type}|${name}|${timestamp}`;
 
-      fetch(webhookUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+      const qr = new QRious({
+        element: document.getElementById('qr-canvas'),
+        value: data,
+        size: 200,
+        level: 'H'
       });
 
-      document.getElementById('result').textContent = `${name}さんの${type}を送信しました。`;
+      document.getElementById('qr-label').textContent = `${name}さんの${type}QRコード`;
+      document.getElementById('result').textContent = `このQRコードをLINE BOTに送信してください。`;
     }
   </script>
 </body>
