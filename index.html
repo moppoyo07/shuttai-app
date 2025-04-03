@@ -1,33 +1,32 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>出退勤システム</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
-      margin: 0;
+      background: #f5f5f5;
       padding: 20px;
-      background-color: #f5f5f5;
     }
     .container {
       max-width: 400px;
-      margin: 0 auto;
+      margin: auto;
       background: white;
-      border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h2 {
       text-align: center;
     }
     select, button {
       width: 100%;
-      margin: 10px 0;
       padding: 12px;
       font-size: 16px;
+      margin: 10px 0;
       border-radius: 8px;
       border: 1px solid #ccc;
     }
@@ -35,26 +34,25 @@
       width: 48%;
       margin: 1%;
     }
-    .qr-area {
-      text-align: center;
-      margin-top: 20px;
-    }
     canvas {
-      margin-top: 10px;
+      margin-top: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
     .result {
+      text-align: center;
       margin-top: 10px;
       color: green;
-      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>出退勤記録</h2>
-    <label for="name">名前：</label>
+    <label>名前を選んでください</label>
     <select id="name">
-      <option value="">選択してください</option>
+      <option value="">-- 名前を選択 --</option>
       <option value="佐藤">佐藤</option>
       <option value="鈴木">鈴木</option>
       <option value="田中">田中</option>
@@ -63,14 +61,10 @@
       <button onclick="generateQR('出勤')">出勤</button>
       <button onclick="generateQR('退勤')">退勤</button>
     </div>
-    <div class="qr-area">
-      <div id="qr-label"></div>
-      <canvas id="qr-canvas"></canvas>
-    </div>
+    <canvas id="qr-canvas"></canvas>
     <div class="result" id="result"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
   <script>
     function generateQR(type) {
       const name = document.getElementById('name').value;
@@ -78,21 +72,18 @@
         alert('名前を選択してください');
         return;
       }
-      const now = new Date();
-      const timestamp = now.toISOString();
-      const data = `${type}|${name}|${timestamp}`;
+      const timestamp = new Date().toISOString();
+      const content = `${type}|${name}|${timestamp}`;
 
       const qr = new QRious({
         element: document.getElementById('qr-canvas'),
-        value: data,
+        value: content,
         size: 200,
         level: 'H'
       });
 
-      document.getElementById('qr-label').textContent = `${name}さんの${type}QRコード`;
-      document.getElementById('result').textContent = `このQRコードをLINE BOTに送信してください。`;
+      document.getElementById('result').textContent = `${type}のQRを表示中：${timestamp}`;
     }
   </script>
 </body>
 </html>
-
