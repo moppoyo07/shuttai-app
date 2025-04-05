@@ -1,89 +1,69 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>出退勤システム</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
-    }
-    .container {
-      max-width: 400px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-    }
-    select, button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    .btn-area button {
-      width: 48%;
-      margin: 1%;
-    }
-    canvas {
-      margin-top: 20px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .result {
-      text-align: center;
-      margin-top: 10px;
-      color: green;
-    }
-  </style>
+  <title>EXIF付きアップロードフォーム</title>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+    // ✅ あなたのfirebaseConfigに差し替えてね！
+    const firebaseConfig = {
+      apiKey: "AIzaSyDFsTE_AelFhiM95Vjprdz1JmIGxHep_zw",
+      authDomain: "photo-upload-form.firebaseapp.com",
+      projectId: "photo-upload-form",
+      storageBucket: "photo-upload-form.appspot.com",
+      messagingSenderId: "194112470190",
+      appId: "1:194112470190:web:38ef7cb06c06432de2413f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+
+    window.uploadImage = async () => {
+      const fileInput = document.getElementById("image");
+      const file = fileInput.files[0];
+      if (!file) return alert("画像を選んでください");
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = async function () {
+          EXIF.getData(img, async function () {
+            const dateTime = EXIF.getTag(this, "DateTimeOriginal");
+            const lat = EXIF.getTag(this, "GPSLatitude");
+            const lon = EXIF.getTag(this, "GPSLongitude");
+
+            if (!dateTime || !lat || !lon) {
+              alert("この画像には撮影日時または位置情報がありません。\n現地で再撮影してください。");
+              return;
+            }
+
+            console.log("撮影日時:", dateTime);
+            console.log("緯度:", lat);
+            console.log("経度:", lon);
+
+            // アップロード
+            const storageRef = ref(storage, `uploads/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            alert("アップロード成功！\n画像URL: " + url);
+          });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+  </script>
+
+  <!-- EXIFライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 </head>
 <body>
-  <div class="container">
-    <h2>出退勤記録</h2>
-    <label>名前を選んでください</label>
-    <select id="name">
-      <option value="">-- 名前を選択 --</option>
-      <option value="佐藤">佐藤</option>
-      <option value="鈴木">鈴木</option>
-      <option value="田中">田中</option>
-    </select>
-    <div class="btn-area">
-      <button onclick="generateQR('出勤')">出勤</button>
-      <button onclick="generateQR('退勤')">退勤</button>
-    </div>
-    <canvas id="qr-canvas"></canvas>
-    <div class="result" id="result"></div>
-  </div>
-
-  <script>
-    function generateQR(type) {
-      const name = document.getElementById('name').value;
-      if (!name) {
-        alert('名前を選択してください');
-        return;
-      }
-      const timestamp = new Date().toISOString();
-      const content = `${type}|${name}|${timestamp}`;
-
-      const qr = new QRious({
-        element: document.getElementById('qr-canvas'),
-        value: content,
-        size: 200,
-        level: 'H'
-      });
-
-      document.getElementById('result').textContent = `${type}のQRを表示中：${timestamp}`;
-    }
-  </script>
+  <h2>EXIF付き営業報告フォーム</h2>
+  <input type="file" id="image" accept="image/*" />
+  <button onclick="uploadImage()">アップロード</button>
 </body>
 </html>
